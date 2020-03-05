@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 from py_ecc.fields import (
-    optimized_bn128_FQ as FQ,
-    optimized_bn128_FQ2 as FQ2,
-    optimized_bn128_FQ12 as FQ12,
+    gmp_optimized_bn128_FQ as FQ,
+    gmp_optimized_bn128_FQ2 as FQ2,
+    gmp_optimized_bn128_FQ12 as FQ12,
 )
 from py_ecc.fields.field_properties import (
     field_properties,

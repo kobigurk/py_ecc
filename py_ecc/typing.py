@@ -5,30 +5,12 @@ from typing import (
 )
 
 from py_ecc.fields import (
-    bn128_FQ,
-    bn128_FQP,
-    bn128_FQ2,
-    bn128_FQ12,
-    bls12_381_FQ,
-    bls12_381_FQP,
-    bls12_381_FQ2,
-    bls12_381_FQ12,
-    optimized_bn128_FQ,
-    optimized_bn128_FQP,
-    optimized_bn128_FQ2,
-    optimized_bn128_FQ12,
-    optimized_bls12_381_FQ,
-    optimized_bls12_381_FQP,
-    optimized_bls12_381_FQ2,
-    optimized_bls12_381_FQ12,
+    gmp_optimized_bn128_FQ,
+    gmp_optimized_bn128_FQP,
+    gmp_optimized_bn128_FQ2,
+    gmp_optimized_bn128_FQ12,
 )
-from py_ecc.fields.field_elements import (
-    FQ,
-    FQP,
-    FQ2,
-    FQ12,
-)
-from py_ecc.fields.optimized_field_elements import (
+from py_ecc.fields.gmp_optimized_field_elements import (
     FQ as Optimized_FQ,
     FQP as Optimized_FQP,
     FQ2 as Optimized_FQ2,
@@ -49,20 +31,11 @@ PlainPoint3D = Tuple[int, int, int]
 Field = TypeVar(
     'Field',
     # General
-    FQ,
-    FQP,
-    FQ2,
-    FQ12,
     # bn128
-    bn128_FQ,
-    bn128_FQP,
-    bn128_FQ2,
-    bn128_FQ12,
-    # bls12_381
-    bls12_381_FQ,
-    bls12_381_FQP,
-    bls12_381_FQ2,
-    bls12_381_FQ12,
+    gmp_optimized_bn128_FQ,
+    gmp_optimized_bn128_FQP,
+    gmp_optimized_bn128_FQ2,
+    gmp_optimized_bn128_FQ12,
 )
 Point2D = Tuple[Field, Field]
 Point3D = Tuple[Field, Field, Field]
@@ -80,15 +53,11 @@ Optimized_Field = TypeVar(
     Optimized_FQ2,
     Optimized_FQ12,
     # bn128
-    optimized_bn128_FQ,
-    optimized_bn128_FQP,
-    optimized_bn128_FQ2,
-    optimized_bn128_FQ12,
+    gmp_optimized_bn128_FQ,
+    gmp_optimized_bn128_FQP,
+    gmp_optimized_bn128_FQ2,
+    gmp_optimized_bn128_FQ12,
     # bls12_381
-    optimized_bls12_381_FQ,
-    optimized_bls12_381_FQP,
-    optimized_bls12_381_FQ2,
-    optimized_bls12_381_FQ12,
 )
 Optimized_Point2D = Tuple[Optimized_Field, Optimized_Field]
 Optimized_Point3D = Tuple[Optimized_Field, Optimized_Field, Optimized_Field]

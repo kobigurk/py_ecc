@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
 from py_ecc.fields import (
-    optimized_bn128_FQ as FQ,
-    optimized_bn128_FQP as FQP,
-    optimized_bn128_FQ2 as FQ2,
-    optimized_bn128_FQ12 as FQ12,
+    gmp_optimized_bn128_FQ as FQ,
+    gmp_optimized_bn128_FQP as FQP,
+    gmp_optimized_bn128_FQ2 as FQ2,
+    gmp_optimized_bn128_FQ12 as FQ12,
 )
 from py_ecc.fields.field_properties import (
     field_properties,
@@ -16,9 +16,11 @@ from py_ecc.typing import (
     Optimized_Point3D,
 )
 
+import gmpy2
+from gmpy2 import mpz
 
-field_modulus = field_properties["bn128"]["field_modulus"]
-curve_order = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+field_modulus = mpz(field_properties["bn128"]["field_modulus"])
+curve_order = mpz(21888242871839275222246405745257275088548364400416034343698204186575808495617)
 
 # Curve order should be prime
 assert pow(2, curve_order, curve_order) == 2

@@ -11,8 +11,10 @@ from typing import (  # noqa: F401
 
 from py_ecc.utils import (
     deg,
-    prime_field_inv,
 )
+
+def prime_field_inv(a, n):
+    return gmpy2.invert(a, n)
 
 if TYPE_CHECKING:
     from py_ecc.typing import (  # noqa: F401
@@ -20,6 +22,9 @@ if TYPE_CHECKING:
         FQ12_modulus_coeffs_type,
     )
 
+import gmpy2
+from gmpy2 import mpz
+mpztype = type(mpz(0))
 
 # These new TypeVars are needed because these classes are kind of base classes and
 # we need the output type to correspond to the type of the inherited class
@@ -27,8 +32,7 @@ T_FQ = TypeVar('T_FQ', bound="FQ")
 T_FQP = TypeVar('T_FQP', bound="FQP")
 T_FQ2 = TypeVar('T_FQ2', bound="FQ2")
 T_FQ12 = TypeVar('T_FQ12', bound="FQ12")
-IntOrFQ = Union[int, T_FQ]
-
+IntOrFQOrMpz = Union[int, T_FQ, mpz]
 
 class FQ(object):
     """
@@ -38,13 +42,15 @@ class FQ(object):
     n = None  # type: int
     field_modulus = None  # type: int
 
-    def __init__(self: T_FQ, val: IntOrFQ) -> None:
+    def __init__(self: T_FQ, val: IntOrFQOrMpz) -> None:
         if self.field_modulus is None:
             raise AttributeError("Field Modulus hasn't been specified")
 
         if isinstance(val, FQ):
-            self.n = val.n
+            self.n = mpz(val.n)
         elif isinstance(val, int):
+            self.n = mpz(val) % self.field_modulus
+        elif isinstance(val, mpztype):
             self.n = val % self.field_modulus
         else:
             raise TypeError(
@@ -52,10 +58,12 @@ class FQ(object):
                 .format(type(val))
             )
 
-    def __add__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __add__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -65,10 +73,12 @@ class FQ(object):
 
         return type(self)((self.n + on) % self.field_modulus)
 
-    def __mul__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __mul__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -78,16 +88,18 @@ class FQ(object):
 
         return type(self)((self.n * on) % self.field_modulus)
 
-    def __rmul__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __rmul__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         return self * other
 
-    def __radd__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __radd__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         return self + other
 
-    def __rsub__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __rsub__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -97,10 +109,12 @@ class FQ(object):
 
         return type(self)((on - self.n) % self.field_modulus)
 
-    def __sub__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __sub__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -110,13 +124,15 @@ class FQ(object):
 
         return type(self)((self.n - on) % self.field_modulus)
 
-    def __mod__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __mod__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         raise NotImplementedError("Modulo Operation not yet supported by fields")
 
-    def __div__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __div__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -128,13 +144,15 @@ class FQ(object):
             self.n * prime_field_inv(on, self.field_modulus) % self.field_modulus
         )
 
-    def __truediv__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __truediv__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         return self.__div__(other)
 
-    def __rdiv__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __rdiv__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         if isinstance(other, FQ):
             on = other.n
         elif isinstance(other, int):
+            on = mpz(other)
+        elif isinstance(other, mpztype):
             on = other
         else:
             raise TypeError(
@@ -146,7 +164,7 @@ class FQ(object):
             prime_field_inv(self.n, self.field_modulus) * on % self.field_modulus
         )
 
-    def __rtruediv__(self: T_FQ, other: IntOrFQ) -> T_FQ:
+    def __rtruediv__(self: T_FQ, other: IntOrFQOrMpz) -> T_FQ:
         return self.__rdiv__(other)
 
     def __pow__(self: T_FQ, other: int) -> T_FQ:
@@ -159,10 +177,12 @@ class FQ(object):
         else:
             return ((self * self) ** int(other // 2)) * self
 
-    def __eq__(self: T_FQ, other: IntOrFQ) -> bool:
+    def __eq__(self: T_FQ, other: IntOrFQOrMpz) -> bool:
         if isinstance(other, FQ):
             return self.n == other.n
         elif isinstance(other, int):
+            return self.n == mpz(other)
+        elif isinstance(other, mpztype):
             return self.n == other
         else:
             raise TypeError(
@@ -170,7 +190,7 @@ class FQ(object):
                 .format(type(other))
             )
 
-    def __ne__(self: T_FQ, other: IntOrFQ) -> bool:
+    def __ne__(self: T_FQ, other: IntOrFQOrMpz) -> bool:
         return not self == other
 
     def __neg__(self: T_FQ) -> T_FQ:
@@ -180,7 +200,7 @@ class FQ(object):
         return repr(self.n)
 
     def __int__(self: T_FQ) -> int:
-        return self.n
+        return int(self.n)
 
     def sgn0_be(self: T_FQ) -> int:
         """
@@ -199,12 +219,11 @@ class FQ(object):
 
     @classmethod
     def one(cls: Type[T_FQ]) -> T_FQ:
-        return cls(1)
+        return cls(mpz(1))
 
     @classmethod
     def zero(cls: Type[T_FQ]) -> T_FQ:
-        return cls(0)
-
+        return cls(mpz(0))
 
 class FQP(object):
     """
@@ -215,8 +234,8 @@ class FQP(object):
     mc_tuples = None  # type: List[Tuple[int, int]]
 
     def __init__(self,
-                 coeffs: Sequence[IntOrFQ],
-                 modulus_coeffs: Sequence[IntOrFQ] = None) -> None:
+                 coeffs: Sequence[IntOrFQOrMpz],
+                 modulus_coeffs: Sequence[IntOrFQOrMpz] = None) -> None:
         if self.field_modulus is None:
             raise AttributeError("Field Modulus hasn't been specified")
 
@@ -245,7 +264,7 @@ class FQP(object):
             )
 
         return type(self)([
-            int(x + y) % self.field_modulus
+            mpz(x + y) % self.field_modulus
             for x, y
             in zip(self.coeffs, other.coeffs)
         ])
@@ -258,7 +277,7 @@ class FQP(object):
             )
 
         return type(self)([
-            int(x - y) % self.field_modulus
+            mpz(x - y) % self.field_modulus
             for x, y
             in zip(self.coeffs, other.coeffs)
         ])
@@ -269,7 +288,13 @@ class FQP(object):
     def __mul__(self: T_FQP, other: Union[int, T_FQP]) -> T_FQP:
         if isinstance(other, int):
             return type(self)([
-                int(c) * other % self.field_modulus
+                mpz(c) * other % self.field_modulus
+                for c
+                in self.coeffs
+            ])
+        elif isinstance(other, mpztype):
+            return type(self)([
+                mpz(c) * other % self.field_modulus
                 for c
                 in self.coeffs
             ])
@@ -297,7 +322,13 @@ class FQP(object):
     def __div__(self: T_FQP, other: Union[int, T_FQP]) -> T_FQP:
         if isinstance(other, int):
             return type(self)([
-                int(c) * prime_field_inv(other, self.field_modulus) % self.field_modulus
+                mpz(c) * prime_field_inv(other, self.field_modulus) % self.field_modulus
+                for c
+                in self.coeffs
+            ])
+        if isinstance(other, mpztype):
+            return type(self)([
+                mpz(c) * prime_field_inv(other, self.field_modulus) % self.field_modulus
                 for c
                 in self.coeffs
             ])
@@ -323,8 +354,8 @@ class FQP(object):
         return o
 
     def optimized_poly_rounded_div(self,
-                                   a: Sequence[IntOrFQ],
-                                   b: Sequence[IntOrFQ]) -> Sequence[IntOrFQ]:
+                                   a: Sequence[IntOrFQOrMpz],
+                                   b: Sequence[IntOrFQOrMpz]) -> Sequence[IntOrFQOrMpz]:
         dega = deg(a)
         degb = deg(b)
         temp = [x for x in a]
@@ -339,11 +370,11 @@ class FQP(object):
     def inv(self: T_FQP) -> T_FQP:
         lm, hm = [1] + [0] * self.degree, [0] * (self.degree + 1)
         low, high = (
-            cast(List[IntOrFQ], list(self.coeffs + (0,))),
-            cast(List[IntOrFQ], list(self.modulus_coeffs + (1,))),
+            cast(List[IntOrFQOrMpz], list(self.coeffs + (0,))),
+            cast(List[IntOrFQOrMpz], list(self.modulus_coeffs + (1,))),
         )
         while deg(low):
-            r = cast(List[IntOrFQ], list(self.optimized_poly_rounded_div(high, low)))
+            r = cast(List[IntOrFQOrMpz], list(self.optimized_poly_rounded_div(high, low)))
             r += [0] * (self.degree + 1 - len(r))
             nm = [x for x in hm]
             new = [x for x in high]
@@ -396,6 +427,14 @@ class FQP(object):
                     sign_i = 1
                 else:
                     sign_i = -1
+            if isinstance(x_i, mpztype):
+                if x_i == 0:
+                    sign_i = 0
+                elif (-x_i % self.field_modulus) > (x_i % self.field_modulus):
+                    sign_i = 1
+                else:
+                    sign_i = -1
+
             elif isinstance(x_i, FQ):
                 sign_i = x_i.sgn0_be()
             else:
@@ -421,7 +460,7 @@ class FQ2(FQP):
     degree = 2
     FQ2_MODULUS_COEFFS = None  # type: FQ2_modulus_coeffs_type
 
-    def __init__(self, coeffs: Sequence[IntOrFQ]) -> None:
+    def __init__(self, coeffs: Sequence[IntOrFQOrMpz]) -> None:
         if self.FQ2_MODULUS_COEFFS is None:
             raise AttributeError("FQ2 Modulus Coeffs haven't been specified")
 
@@ -436,7 +475,7 @@ class FQ12(FQP):
     degree = 12
     FQ12_MODULUS_COEFFS = None  # type: FQ12_modulus_coeffs_type
 
-    def __init__(self, coeffs: Sequence[IntOrFQ]) -> None:
+    def __init__(self, coeffs: Sequence[IntOrFQOrMpz]) -> None:
         if self.FQ12_MODULUS_COEFFS is None:
             raise AttributeError("FQ12 Modulus Coeffs haven't been specified")
 
